@@ -21,16 +21,56 @@ if(!gl) throw new Error('Your browser not support WebGL ;(')
 
 
 const vertexData = [
-  0,   1,  0,
-  1,  -1,  0,
-  -1, -1,  0,
+  // 0,   1,  0,
+  // 1,  -1,  0,
+  // -1, -1,  0,
+
+  // Front
+  -.5, -.5, .5,
+  0, .5, 0,
+  .5, -.5, .5,
+
+  // Left
+  -.5, -.5, -.5,
+  0, .5, 0,
+  -.5, -.5, .5,
+
+  // Right
+  .5, -.5, .5,
+  0, .5, 0,
+  .5, -.5, -.5,
+
+  // Back
+  -.5, -.5, -.5,
+  0, .5, 0,
+  .5, -.5, -.5,
+
+  // Bottom
+  -.5, -.5, -.5,
+  .5, -.5, -.5,
+  .5, -.5, .5,
+
+  -.5, -.5, -.5,
+  .5, -.5, .5,
+  -.5, -.5, .5,
 ]
 
-const colorData = [
-  1, 0, 1,
-  0, 1, 0,
-  0, 1, 1,
-]
+function generateVertexColor(){
+  return [Math.random(), Math.random(), Math.random()]
+}
+
+// filling faces with random colors
+let colorData = []
+for (let face = 0; face < 4; face++) {
+  const faceColor = generateVertexColor()
+  for (let j = 0; j < 3; j++) {
+    colorData.push(...faceColor)
+  }
+}
+const bottomColor = generateVertexColor()
+for (let j = 0; j < 6; j++) {
+  colorData.push(...bottomColor)
+}
 
 // create a buffer
 const positionBuffer = gl.createBuffer()
@@ -98,19 +138,24 @@ gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
 gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0)
 
 gl.useProgram(program)
+gl.enable(gl.DEPTH_TEST)
 
 const uniformLocations = {
   matrix: gl.getUniformLocation(program, 'matrix')
 }
 
 const matrix = mat4.create()
-mat4.scale(matrix, matrix, [.5, .5, .5])
+mat4.scale(matrix, matrix, [1, .8, 1])
+// gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
+// gl.drawArrays(gl.TRIANGLES, 0, 18)
+// mat4.scale(matrix, matrix, [.5, .5, .5])
 
 function animate(){
   requestAnimationFrame(animate);
-  mat4.rotateZ(matrix, matrix, Math.PI / 360)
+  mat4.rotateZ(matrix, matrix, Math.PI / 720)
+  mat4.rotateY(matrix, matrix, Math.PI / 180)
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 3)
+  gl.drawArrays(gl.TRIANGLES, 0, 18)
 }
 
 animate()

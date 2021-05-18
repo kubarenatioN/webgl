@@ -1,6 +1,8 @@
 const mat4 = glMatrix.mat4
+const vec3 = glMatrix.vec3
 const quat = glMatrix.quat
 const canvas = document.getElementById('canvas')
+const wrapper = document.getElementById('wrapper')
 const gl = canvas.getContext('webgl')
 
 const canvasState = {
@@ -9,18 +11,28 @@ const canvasState = {
     x: 0,
     y: 0,
     dx: 0,
-    dy: 0
+    dy: 0,
+    rotateY: 340,
+    rotateX: 350
   },
   mouse: {
     lastX: -1,
     lastY: -1
   },
   isDragging: false,
-  delta: 2*Math.PI
+  delta: 2*Math.PI,
+  setRotateY: function(val) {
+    this.angle.rotateY = (this.angle.rotateY + val) % 360
+  },
+  setRotateX: function(val) {
+    this.angle.rotateX = (this.angle.rotateX + val) % 360
+  }
 }
 
 const rotateBtnY = document.getElementById('rotateY')
 const rotateRangeY = document.getElementById('rotateYrange')
+const cubeFormBtn = document.getElementById('cube-form-btn')
+const pyramidFormBtn = document.getElementById('pyramid-form-btn')
 
 if(!gl) throw new Error('Your browser not support WebGL ;(')
 
@@ -37,73 +49,240 @@ if(!gl) throw new Error('Your browser not support WebGL ;(')
 
 // enable vertex attributes 
 
-// draw
+// define buffers
+let positionBuffer
+let colorBuffer
+let vertecies
+// Init Pyramid object
+// InitPyramidData()
+InitCubeData()
 
+function InitPyramidData(){
 
-const vertexData = [
+  vertecies = 18
 
-  // Front
-  -.5, -.5, .5,
-  0, .5, 0,
-  .5, -.5, .5,
+  const vertexData = [
 
-  // Left
-  -.5, -.5, -.5,
-  0, .5, 0,
-  -.5, -.5, .5,
+    // Front
+    -.5, -.5, .5,
+    0, .5, 0,
+    .5, -.5, .5,
 
-  // Right
-  .5, -.5, .5,
-  0, .5, 0,
-  .5, -.5, -.5,
+    // Left
+    -.5, -.5, -.5,
+    0, .5, 0,
+    -.5, -.5, .5,
 
-  // Back
-  -.5, -.5, -.5,
-  0, .5, 0,
-  .5, -.5, -.5,
+    // Right
+    .5, -.5, .5,
+    0, .5, 0,
+    .5, -.5, -.5,
 
-  // Bottom
-  -.5, -.5, -.5,
-  .5, -.5, -.5,
-  .5, -.5, .5,
+    // Back
+    -.5, -.5, -.5,
+    0, .5, 0,
+    .5, -.5, -.5,
 
-  -.5, -.5, -.5,
-  .5, -.5, .5,
-  -.5, -.5, .5,
-]
+    // Bottom
+    -.5, -.5, -.5,
+    .5, -.5, -.5,
+    .5, -.5, .5,
 
-function generateVertexColor(){
-  return [Math.random(), Math.random(), Math.random()]
-}
+    -.5, -.5, -.5,
+    .5, -.5, .5,
+    -.5, -.5, .5,
+  ]
 
-// filling faces with random colors
-let colorData = []
-for (let face = 0; face < 4; face++) {
-  const faceColor = generateVertexColor()
-  for (let j = 0; j < 3; j++) {
-    colorData.push(...faceColor)
+  function generateVertexColor() {
+    return [Math.random(), Math.random(), Math.random()]
   }
+
+  // filling faces with random colors
+  let colorData = []
+  for (let face = 0; face < 4; face++) {
+    const faceColor = generateVertexColor()
+    for (let j = 0; j < 3; j++) {
+      colorData.push(...faceColor)
+    }
+  }
+  const bottomColor = generateVertexColor()
+  for (let j = 0; j < 6; j++) {
+    colorData.push(...bottomColor)
+  }
+
+  // create a buffer
+  positionBuffer = gl.createBuffer()
+
+  // bind it to the context
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+
+  // load data into a buffer
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
+
+  // create a color buffer
+  colorBuffer = gl.createBuffer()
+  // bind it to the context
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+  // load data into a buffer
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW)
+
 }
-const bottomColor = generateVertexColor()
-for (let j = 0; j < 6; j++) {
-  colorData.push(...bottomColor)
+function InitCubeData(){
+
+  vertecies = 36
+
+  const vertexData = [
+
+    // Back
+    -.5, .5, -.5,
+    .5, .5, -.5,
+    .5, -.5, -.5,
+
+    -.5, .5, -.5,
+    .5, -.5, -.5,
+    -.5, -.5, -.5,
+
+    // Left
+    -.5, -.5, -.5,
+    -.5, .5, -.5,
+    -.5, .5, .5,
+
+    -.5, -.5, -.5,
+    -.5, .5, .5,
+    -.5, -.5, .5,
+
+    // Right
+    .5, -.5, -.5,
+    .5, .5, -.5,
+    .5, .5, .5,
+
+    .5, -.5, -.5,
+    .5, .5, .5,
+    .5, -.5, .5,
+
+    // Top
+    -.5, .5, -.5,
+    .5, .5, -.5,
+    .5, .5, .5,
+
+    -.5, .5, -.5,
+    .5, .5, .5,
+    -.5, .5, .5,
+
+    // Bottom
+    -.5, -.5, -.5,
+    .5, -.5, -.5,
+    .5, -.5, .5,
+
+    -.5, -.5, -.5,
+    .5, -.5, .5,
+    -.5, -.5, .5,
+
+    // Front
+    -.5, .5, .5,
+    .5, .5, .5,
+    .5, -.5, .5,
+
+    -.5, .5, .5,
+    .5, -.5, .5,
+    -.5, -.5, .5,
+  ]
+
+  function generateVertexColor() {
+    return [Math.random(), Math.random(), Math.random()]
+  }
+
+  // filling faces with random colors
+  let colorData = []
+  for (let face = 0; face < 6; face++) {
+    const faceColor = generateVertexColor()
+    for (let j = 0; j < 6; j++) {
+      colorData.push(...faceColor)
+    }
+  }
+
+  // create a buffer
+  positionBuffer = gl.createBuffer()
+
+  // bind it to the context
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+
+  // load data into a buffer
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
+
+  // create a color buffer
+  colorBuffer = gl.createBuffer()
+  // bind it to the context
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+  // load data into a buffer
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW)
+
 }
 
-// create a buffer
-const positionBuffer = gl.createBuffer()
+// const vertexData = [
 
-// bind it to the context
-gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+//   // Front
+//   -.5, -.5, .5,
+//   0, .5, 0,
+//   .5, -.5, .5,
 
-// load data into a buffer
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
+//   // Left
+//   -.5, -.5, -.5,
+//   0, .5, 0,
+//   -.5, -.5, .5,
 
-// create a color buffer
-const colorBuffer = gl.createBuffer()
-// bind it to the context
-gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
-// load data into a buffer
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW)
+//   // Right
+//   .5, -.5, .5,
+//   0, .5, 0,
+//   .5, -.5, -.5,
+
+//   // Back
+//   -.5, -.5, -.5,
+//   0, .5, 0,
+//   .5, -.5, -.5,
+
+//   // Bottom
+//   -.5, -.5, -.5,
+//   .5, -.5, -.5,
+//   .5, -.5, .5,
+
+//   -.5, -.5, -.5,
+//   .5, -.5, .5,
+//   -.5, -.5, .5,
+// ]
+
+// function generateVertexColor(){
+//   return [Math.random(), Math.random(), Math.random()]
+// }
+
+// // filling faces with random colors
+// let colorData = []
+// for (let face = 0; face < 4; face++) {
+//   const faceColor = generateVertexColor()
+//   for (let j = 0; j < 3; j++) {
+//     colorData.push(...faceColor)
+//   }
+// }
+// const bottomColor = generateVertexColor()
+// for (let j = 0; j < 6; j++) {
+//   colorData.push(...bottomColor)
+// }
+
+// // create a buffer
+// const positionBuffer = gl.createBuffer()
+
+// // bind it to the context
+// gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+
+// // load data into a buffer
+// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
+
+// // create a color buffer
+// const colorBuffer = gl.createBuffer()
+// // bind it to the context
+// gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+// // load data into a buffer
+// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW)
 
 
 
@@ -175,11 +354,11 @@ const matrix = mat4.create()
 const newrot = mat4.create()
 
 mat4.scale(matrix, matrix, [1, 1, 1])
-mat4.rotateX(matrix, matrix, degToRad(-10))
-mat4.rotateY(matrix, matrix, degToRad(-20))
+mat4.rotateX(matrix, matrix, degToRad(canvasState.angle.rotateX))
+mat4.rotateY(matrix, matrix, degToRad(canvasState.angle.rotateY))
 gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
 // console.log(matrix);
-gl.drawArrays(gl.TRIANGLES, 0, 18)
+gl.drawArrays(gl.TRIANGLES, 0, vertecies)
 
 
 function animate(){
@@ -187,7 +366,7 @@ function animate(){
   mat4.rotateZ(matrix, matrix, Math.PI / 720)
   mat4.rotateY(matrix, matrix, Math.PI / 180)
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 18)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
 }
 // animate()
 
@@ -196,21 +375,21 @@ function drawPyramid(degY, degX){
   mat4.rotateY(matrix, matrix, -degX / 100)
 
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 18)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
 }
 
 function InitListeners(){
-  canvas.addEventListener('mousedown', mousedown)
-  canvas.addEventListener('mouseup', mouseup)
-  canvas.addEventListener('mouseout', mouseup)
-  canvas.addEventListener('mousemove', mousemove)
+  wrapper.addEventListener('mousedown', mousedown)
+  wrapper.addEventListener('mouseup', mouseup)
+  // wrapper.addEventListener('mouseout', mouseup)
+  wrapper.addEventListener('mousemove', mousemove)
 }
 
 function mousedown(e){
   // mouse position on mousedown
   const x = e.clientX
   const y = e.clientY
-  const rect = e.target.getBoundingClientRect()
+  const rect = wrapper.getBoundingClientRect()
 
   // if we mousedown within canvas 
   if(rect.left < x && x < rect.right && rect.top < y && y < rect.bottom){
@@ -244,8 +423,12 @@ function mousemove(e){
 
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
 
-  gl.drawArrays(gl.TRIANGLES, 0, 18)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
+
+  canvasState.setRotateX(-degY)
+  canvasState.setRotateY(-degX)
   
+  // console.log('drag:',canvasState.angle.rotateY);
   // drawPyramid(degY, degX)
 }
 
@@ -294,21 +477,63 @@ const m4 = {
 }
 
 function rotateY(angle){
+  canvasState.setRotateY(angle)
   mat4.rotateY(matrix, matrix, degToRad(angle))
+
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
-  gl.drawArrays(gl.TRIANGLES, 0, 18)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
 }
 function rotateYTo(angle){
 
-  const matrix = m4.xRotation(degToRad(-10))
-  const xRotMatrix = m4.yRotation(degToRad(angle))
-  mat4.multiply(matrix, matrix, xRotMatrix)
+  const angledDiff = angle - canvasState.angle.rotateY
+
+  canvasState.angle.rotateY = angle
+
+  // console.log(canvasState.angle.rotateY);
+
+  // const xRotMatrix = m4.xRotation(degToRad(canvasState.angle.rotateX))
+  // const yRotMatrix = m4.yRotation(degToRad(canvasState.angle.rotateY))
+  
+  // mat4.multiply(matrix, xRotMatrix, yRotMatrix)
+
+  mat4.rotateY(matrix, matrix, degToRad(angledDiff))
 
   gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
-
-  gl.drawArrays(gl.TRIANGLES, 0, 18)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
 }
 
-rotateBtnY.addEventListener('click', () => rotateY(10))
+rotateBtnY.addEventListener('click', () => {
+  rotateY(20)
+  rotateRangeY.value = canvasState.angle.rotateY
+})
 
 rotateRangeY.addEventListener('input', () => rotateYTo(rotateRangeY.value))
+
+cubeFormBtn.addEventListener('click', () => {
+  InitCubeData()
+
+  rebindBuffers()
+
+  gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
+})
+pyramidFormBtn.addEventListener('click', () => {
+  InitPyramidData()
+
+  rebindBuffers()
+
+  gl.uniformMatrix4fv(uniformLocations.matrix, false, matrix)
+  gl.drawArrays(gl.TRIANGLES, 0, vertecies)
+})
+
+function rebindBuffers(){
+  const positionLocation = gl.getAttribLocation(program, `position`)
+  gl.enableVertexAttribArray(positionLocation)
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+  gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0)
+
+  const colorLocation = gl.getAttribLocation(program, `color`)
+  gl.enableVertexAttribArray(colorLocation)
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+  gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0)
+}
